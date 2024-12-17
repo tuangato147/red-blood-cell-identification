@@ -1,0 +1,55 @@
+# Đọc hình ảnh đã được cải tiến
+img = cv2.imread('c120.png', 0)
+
+# Thực hiện các phép biến đổi hình thái học
+kernel = np.ones((5, 5), np.uint8)
+dilation = cv2.dilate(img, kernel, iterations=1)
+closing = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
+
+# Áp dụng ngưỡng th adapt trên bộ lọc trung bình và Gauss
+th2 = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_MEAN_C,
+                            cv2.THRESH_BINARY, 11, 2)
+th3 = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                            cv2.THRESH_BINARY, 11, 2)
+# Ngưỡng Otsu
+ret4, th4 = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+# Khởi tạo các danh sách
+Cell_count, x_count, y_count = [], [], []
+
+# Đọc hình ảnh gốc để hiển thị đường tròn và vị trí trung tâm
+display = cv2.imread("c120.png")
+
+# Biến đổi Hough với tham số vòng tròn được điều chỉnh
+circles = cv2.HoughCircles(img, cv2.HOUGH_GRADIENT, 1.2, 20,
+                           param1=80, param2=28, minRadius=5, maxRadius=20)
+#1.jpg::param1=70, param2=20, minRadius=6, maxRadius=20)
+#c120.png::param1=80, param2=28, minRadius=5, maxRadius=20)
+
+# Phát hiện và đánh dấu các đường tròn sử dụng biến đổi Hough
+if circles is not None:
+    # Chuyển đổi tọa độ (x, y) và bán kính của các đường tròn thành số nguyên
+    circles = np.round(circles[0, :]).astype("int")
+
+    # Duyệt qua các tọa độ (x, y) và bán kính của các đường tròn
+    for (x, y, r) in circles:
+        cv2.circle(display, (x, y), r, (0, 255, 0), 2)
+        cv2.rectangle(display, (x - 2, y - 2), (x + 2, y + 2), (0, 128, 255), -1)
+        Cell_count.append(r)
+        x_count.append(x)
+        y_count.append(y)
+
+    # Hiển thị hình ảnh kết quả
+    plt.imshow(cv2.cvtColor(display, cv2.COLOR_BGR2RGB))
+    plt.title("Detected Circles")
+    plt.axis('off')
+    plt.show()
+
+# Hiển thị số lượng đường tròn
+print(f"Số lượng đường tròn: {len(Cell_count)}")
+# Tổng số bán kính
+print(f"Tổng bán kính: {sum(Cell_count)}")
+# Tọa độ X của các đường tròn
+print(f"Tọa độ X của các đường tròn: {x_count}")
+# Tọa độ Y của các đường tròn
+print(f"Tọa độ Y của các đường tròn: {y_count}")
